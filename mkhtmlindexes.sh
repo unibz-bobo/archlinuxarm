@@ -30,7 +30,7 @@ appendDirectory() {
 appendFile() {
   local fileName="$(basename "$1")"
   local fileDate="$(TZ="UTC" stat -c %y "$1" | cut -f1 -d".")"
-  local fileSize="$(du -h "$1" | cut -f1 | tr ',' '.')"
+  local fileSize="$(LC_NUMERIC="C" du -bh "$1" | cut -f1)"
   appendToIndexHtmlTable "$(dirname "$1")" "$fileName" "$fileDate UTC" "$fileSize"
 }
 
@@ -40,10 +40,16 @@ createIndexHtml() {
 <!DOCTYPE html>
 <head>
 <title>Index of /$1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 </head>
 <body>
+<div class="container-fluid">
 <h1>Index of /$1</h1>
-<table>
+<div class="table-responsive">
+<table class="table table-striped">
 <thead>
 <tr><th>Name</th><th>Last modified</th><th>Size</th></tr>
 </thead>
@@ -51,6 +57,8 @@ createIndexHtml() {
 <tr><td><a href='./../index.html'>Parent Directory</a></td><td></td><td>-</td></tr>
 </tbody>
 </table>
+</div>
+</div>
 </body>
 EOF
 }
