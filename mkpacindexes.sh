@@ -10,6 +10,7 @@ processDirectory() {
   if [ $packages -gt 0 ]; then
     echo " found $packages packages"
     bash -c "cd $dir; repo-add "$dirName.db.tar.gz" *.pkg.tar.xz; rm "$dirName.db"; cp "$dirName.db.tar.gz" "$dirName.db"; rm *.db.tar.gz.old"
+    bash -c "cd $dir; rm "$dirName.files"; cp "$dirName.files.tar.gz" "$dirName.files"; rm *.files.tar.gz.old"
   else
     echo ""
   fi
