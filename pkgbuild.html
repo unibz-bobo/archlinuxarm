@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+<head>
+<title>Arch Linux ARM repository for the UniBZ Raspberry Pi cluster</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="./styles.css">
+<link rel="apple-touch-icon" sizes="57x57" href="./apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="./apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="./apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="./apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="./apple-icon-114x114.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="./favicon-96x96.png">
+<link rel="manifest" href="./manifest.json">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="msapplication-TileImage" content="./ms-icon-144x144.png">
+<meta name="theme-color" content="#ffffff">
+</head>
+<body>
+<div class="container">
+  <div class="row">
+    <div class="col-sm-4">
+<a href="http://unibz-bobo.github.io/" rel="nofollow"><img class="img-responsive center-block" src="./images/megarpi.png" alt="megarpi"></a>
+    </div>
+    <div class="col-sm-4">
+<a href="http://archlinuxarm.org/" rel="nofollow"><img class="img-responsive center-block" src="./images/archlinuxarm.png" alt="archlinuxarm"></a>
+    </div>
+    <div class="col-sm-4">
+<a href="http://unibz-bobo.github.io/" rel="nofollow"><img class="img-responsive center-block" src="./images/bobo_logo_orange.png" alt="bobo_logo_orange"></a>
+    </div>
+  </div>
+  <ul class="nav nav-tabs nav-justified">
+    <li><a href="./index.html">Home</a></li>
+    <li><a href="./installation.html">Installation</a></li>
+    <!--<li><a href="./cross-compiling.html">Cross Compilation</a></li>-->
+    <li  class="active"><a href="#">Package Building</a></li>
+    <li><a href="./pkgs/index.html">Package Repository</a></li>
+  </ul>
+  <h1 class="text-center">
+    <a id="creating-software-packages-for-arch-linux-build-system" class="anchor" href="#creating-software-packages-for-arch-linux-build-system">
+Creating Software Packages for Arch Linux Build System
+    </a>
+  </h1>
+  <p>This guide will show you by an example how to build software package for Arch Linux ARM that can be installed with <code>pacman</code>. The example will install a simple "Hello World" script in one of the variable <code>PATH</code> defined software directory.</p>
+  <h2 class="text-center">
+    <a id="preparations" class="anchor" href="#preparations">
+Preparations
+    </a>
+  </h2>
+  <ul><li>Update the operating system with <code>pacman -Syu</code> and install the needed build environment with <code>pacman -S base-devel</code> and acknowledge the proposed package selections.</li></ul>
+  <p><strong>Important:</strong> Each of the following steps must be executed within a normal user account, not within the <em>root</em> user account.</p>
+  <ul><li>From your <em>user home directory</em> create a new subdirectory. By convention it should be named after the name of your software package project for example <code>helloworld</code>.</li><li>Change into the created directory and create a new empty file called by convention <code>PKGBUILD</code>.<ul><li><strong>Note:</strong> The filename must be written in capital letters and without any filename extension.</li></ul></li><li>Open the file <code>PKGBUILD</code> in <code>nano</code> and paste following content into it:</li></ul>
+  <pre class="code highlight js-syntax-highlight plaintext"><code># Maintainer: Julian Sanin &lt;sanin89julian@gmail.com&gt;&#x000A;pkgname=helloworld&#x000A;pkgver=0.1&#x000A;pkgrel=1&#x000A;arch=('any')&#x000A;license=('BSD')&#x000A;install="${pkgname}.install"&#x000A;source=("${pkgname}")&#x000A;&#x000A;package() {&#x000A;  install -o root -g root -Dm755 "${pkgname}" "${pkgdir}/usr/local/bin/${pkgname}"&#x000A;}</code></pre>
+  <p>By convention the <code>PKGBUILD</code> file needs the mandatory variables <code>pkgname</code>, <code>pkgver</code>, <code>pkgrel</code>, and <code>arch</code>. They define file name of the final package including the package name, version, release and processor architecture. The variable <code>license</code> is optional but <code>makepkg</code> will produce a warning if not present. The variables <code>install</code> and <code>source</code> are also optional but they are useful to indicate an additional install file for install messages and to add further source code files beside the default <code>src</code> subdirectory.</p>
+  <p>The package build environment uses some of the variables which are useful for example <code>pkgname</code> as defined by the user will be replaced with its package name or <code>pkgdir</code> as a replacement for the installation parent directory.</p>
+  <p>Also required is the function <code>package()</code>. It indicates where the software package files should be installed and which permissions should be applied. In our case we will install a script file called <code>helloworld</code> in the directory <code>/usr/local/bin/</code> and we apply to the file the owner and group <em>root</em> with permission <code>755</code>, short form for <code>rwx</code> by <em>root</em> and <code>r-x</code> for anybody else.</p>
+  <p>Not required but as a form of courtesy the first line of the <code>PKGBUILD</code> file should contain a info about package maintainer who is responsible for the software package.</p>
+  <ul><li>Save and exit <code>nano</code> and create a new empty file called <code>helloworld.install</code> and paste following content:</li></ul>
+  <pre class="code highlight js-syntax-highlight plaintext"><code>post_install() {&#x000A;  post_upgrade "${@}"&#x000A;}&#x000A;&#x000A;post_upgrade() {&#x000A;  cat &lt;&lt; MSG&#x000A;&gt;&gt;&gt; Installed `helloworld`&#x000A;MSG&#x000A;}&#x000A;&#x000A;post_remove() {&#x000A;  cat &lt;&lt; MSG&#x000A;&gt;&gt;&gt; Removed `helloworld`&#x000A;MSG&#x000A;}</code></pre>
+  <p>Similar like the <code>PKGBUILD</code> file also the <code>.install</code> file contains some predefined functions. In this case for example for the events of <em>installing</em>, <em>upgrading</em> and <em>removing</em> a package with <code>pacman</code>. Here we put only a simple message that will be printed on install and remove of the package, but this file allows also to execute any shell command just like as in a shell script.</p>
+  <ul><li>Finally create a new empty file called <code>helloworld</code> and paste following content:</li></ul>
+  <pre class="code highlight js-syntax-highlight shell"><code><span class="c">#!/bin/bash</span>&#x000A;<span class="nb">echo</span> <span class="s2">"Hello World!"</span>&#x000A;<span class="nb">exit </span>0</code></pre>
+  <p>As you can see the script is very simple and does only print a simple "Hello World" message.</p>
+  <h2 class="text-center">
+    <a id="creating-the-package" class="anchor" href="#creating-the-package">
+Creating the Package
+    </a>
+  </h2>
+  <ul><li>To actually build the package you have issue two commands: <code>updpkgsums</code> and <code>makepkg</code>.<ul><li><code>updpkgsums</code> will add a <a href="http://en.wikipedia.org/wiki/MD5">MD5 check sum</a> to the <code>PKGBUILD</code> file that is required to check the integrity of the final software package. <strong>Note:</strong> If you are committing to a code reposity you have to remove in the <code>PKGBUILD</code> file the last line containing the <code>md5sums</code> variable since it could be that someone could potentialy update the code but then the package build would fail because the check sum is not the same anymore.</li><li><code>makepkg</code> builds the software package and produces a <code>.pkg.tar.xz</code> for example in our case <code>helloworld-0.1-1-any.pkg.tar.xz</code> file that can be transfered to another machine and installed by <code>pacman</code>.</li></ul></li></ul>
+  <h2 class="text-center">
+    <a id="run-it" class="anchor" href="#run-it">
+Run it
+    </a>
+  </h2>
+  <ul><li>To install the package run in our example <code>pacman -U helloworld-0.1-1-any.pkg.tar.xz</code> as root. The helloworld script will be installed in the filesystem and be available as a command <code>helloworld</code>.</li><li>To remove the package simply type <code>pacman -R helloworld</code> as root.</li></ul>
+  <h3 class="text-center">
+    <a id="sources" class="anchor" href="#sources">
+Sources:
+    </a>
+  </h3>
+  <ul><li><a href="https://wiki.archlinux.org/index.php/PKGBUILD">https://wiki.archlinux.org/index.php/PKGBUILD</a></li><li><a href="https://wiki.archlinux.org/index.php/Creating_packages">https://wiki.archlinux.org/index.php/Creating_packages</a></li></ul>
+
+
+
+<!--  <h1 class="text-center">
+    <small class="color-bobo">
+Official Arch Linux ARM page of the UniBZ Raspberry Pi cluster
+    </small>
+  </h1>
+  <h2 class="text-center">
+    <a id="arch-linux-arm" class="anchor" href="#arch-linux-arm">
+Arch Linux ARM
+    </a>
+  </h2>
+  <p>
+Arch Linux ARM (short "alarm") is a community developed port of the
+<a href="https://www.archlinux.org">Arch Linux operating system</a> for ARM
+processors. The development of the OS was born from
+<a href="https://bbs.archlinux.org/viewtopic.php?id=117251">the combination of
+the development teams of PlugApps and ArchMobile</a>.
+  </p>
+  <p>
+Alarm has a rolling-release cycle meaning that packages are updated on daily
+basis. To install new software packages you have to go trough the
+<code>pacman -Syu</code> and <code>pacman -S package-name</code> cycle. Alarm
+is not downloadable via a conventional system image file (*.img) as in other OS
+distributions but there is <a href="http://archlinuxarm.org/platforms">released
+on a weekly basis a snapshot of the root filesystem</a> via a compressed
+*.tar.gz file.
+  </p>
+  <p>
+The base alarm system is a striped down version supplied only with the bare
+basics without a graphical user interface but with an enabled SSH connection.
+Your are required to know some basics on how to work with a linux terminal and
+on how to connect to an remote SSH shell.
+  </p>
+  <h2 class="text-center">
+    <a id="alarm-repo-bobo" class="anchor" href="#alarm-repo-bobo">
+Arch Linux ARM repository of the Bobo cluster
+    </a>
+  </h2>
+  <p>
+Some bits and pieces of the customized software for Bobo are 
+<a href="https://github.com/unibz-bobo">available on github</a>. In particular
+we offer a <a href="https://github.com/unibz-bobo/pacbobo">lightweight pacman
+wrapper script called pacbobo</a> to allow the installation of customized
+software on the cluster. The additional software packages can be browsed in the
+<a href="./pkgs/index.html">unofficial Arch Linux ARM package repository</a> for
+and the package build files can be found also on github.
+  </p>
+  <p>
+The packages are available for both processor architectures (<em>armv6h</em>
+&amp; <em>armv7h</em>) used by the <strong>Raspberry Pi Model B/B+</strong> and
+the <strong>Raspberry Pi 2 Model B</strong>. Any further installable packages
+can be found <a href="http://archlinuxarm.org/packages">package listing page of
+Arch Linux ARM</a>. General hints about setting up software an configuration can
+be found <a href="https://wiki.archlinux.org/"> on the Wiki page of Arch
+Linux</a>.
+  </p>-->
+
+
+
+
+  <hr>
+  <h4 class="text-center">
+<small>Free University of Bolzano - Faculty of Computer Science -
+2013-2016</small>
+  </h4>
+  <a href="http://www.inf.unibz.it/">
+    <img class="img-responsive center-block" src="./images/unibz_cs_logo.png" alt="unibz_cs_logo">
+  </a>
+</div>
+</body>

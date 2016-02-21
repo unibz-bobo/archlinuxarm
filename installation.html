@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html>
+<head>
+<title>Arch Linux ARM repository for the UniBZ Raspberry Pi cluster</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="./styles.css">
+<link rel="apple-touch-icon" sizes="57x57" href="./apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="./apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="./apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="./apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="./apple-icon-114x114.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="./favicon-96x96.png">
+<link rel="manifest" href="./manifest.json">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="msapplication-TileImage" content="./ms-icon-144x144.png">
+<meta name="theme-color" content="#ffffff">
+</head>
+<body>
+<div class="container">
+  <div class="row">
+    <div class="col-sm-4">
+<a href="http://unibz-bobo.github.io/" rel="nofollow"><img class="img-responsive center-block" src="./images/megarpi.png" alt="megarpi"></a>
+    </div>
+    <div class="col-sm-4">
+<a href="http://archlinuxarm.org/" rel="nofollow"><img class="img-responsive center-block" src="./images/archlinuxarm.png" alt="archlinuxarm"></a>
+    </div>
+    <div class="col-sm-4">
+<a href="http://unibz-bobo.github.io/" rel="nofollow"><img class="img-responsive center-block" src="./images/bobo_logo_orange.png" alt="bobo_logo_orange"></a>
+    </div>
+  </div>
+  <ul class="nav nav-tabs nav-justified">
+    <li><a href="./index.html">Home</a></li>
+    <li class="active"><a href="#">Installation</a></li>
+    <!--<li><a href="./cross-compiling.html">Cross Compilation</a></li>-->
+    <li><a href="./pkgbuild.html">Package Building</a></li>
+    <li><a href="./pkgs/index.html">Package Repository</a></li>
+  </ul>
+  <h1 class="text-center">
+    <a id="simple-install-instructions" class="anchor" href="#simple-install-instructions">
+Install Instructions for a single RPi
+    </a>
+  </h1>
+  <p>
+To bootstrap the OS we have to "burn" from a *nix like system the contents of a
+decompressed <a href="http://archlinuxarm.org/platforms">*.tar.gz</a> file to an
+SD card. For the Raspberry Pi there exists two releases both for the older
+<a href="http://archlinuxarm.org/os/ArchLinuxARM-rpi-latest.tar.gz">B/B+
+model</a> and the newer
+<a href="http://archlinuxarm.org/os/ArchLinuxARM-rpi-2-latest.tar.gz">2nd
+edition B model</a>. You need also either a built-in (<code>/dev/mmcblk_</code>)
+or USB card reader (<code>/dev/sd_</code>) for writing to the SD card. Replace
+the underscore (<code>_</code>) with the number/letter that has been assigned to
+your card reader, ie. check for example the output of <code>dmesg</code>.
+  </p>
+  <ol>
+    <li>
+Put the SD card into the card reader and open up a shell. Check if your system
+is automounting existing SD card partitions and unmount them via
+<code>sudo umount /media/$USER/*</code> or <code>sudo umount /mnt/*</code>.
+    </li>
+    <li>
+Elevate your shell with admin rights, ie. type <code>sudo bash</code>.
+    </li>
+    <li>
+Create a basic partition file via <code>touch disk.layout</code> and insert the
+content from below.
+    </li>
+    <li>
+Start sfdisk to partition the SD card:
+<code>sfdisk --force /dev/mmcblk_ &lt; disk.layout</code> or
+<code>sfdisk --force /dev/sd_ &lt; disk.layout</code>.
+    </li>
+    <li>
+Create the FAT filesystem for the boot partition:
+<code>mkfs.vfat /dev/mmcblk_p1</code> or <code>mkfs.vfat /dev/sd_1</code>.
+    </li>
+    <li>
+Create the ext4 filesystem for the root partition:
+<code>mkfs.ext4 /dev/mmcblk_p2</code> or <code>mkfs.ext4 /dev/sd_2</code>.
+    </li>
+    <li>
+Create directories for the mounting points: <code>mkdir boot root</code>.
+    </li>
+    <li>
+Mount the boot partition: <code>mount /dev/mmcblk_p1 boot</code> or
+<code>mount /dev/sd_1 boot</code>.
+    </li>
+    <li>
+Mount the root partition: <code>mount /dev/mmcblk_p2 root</code> or
+<code>mount /dev/sd_2 root</code>.
+    </li>
+    <li>
+Download the root filesystem:
+<code>wget http://archlinuxarm.org/os/ArchLinuxARM-rpi-latest.tar.gz</code> or
+<code>wget http://archlinuxarm.org/os/ArchLinuxARM-rpi-2-latest.tar.gz</code>.
+    </li>
+    <li>
+Extract the root filesystem to SD card and go for a coffee (Debian may require
+to install bsdtar: <code>apt-get install bsdtar</code>):
+<code>bsdtar -xpf ArchLinuxARM-rpi-latest.tar.gz -C root</code> or
+<code>bsdtar -xpf ArchLinuxARM-rpi-2-latest.tar.gz -C root</code>.
+    </li>
+    <li>
+Sync disk: <code>sync</code>.
+    </li>
+    <li>
+Move boot files to the boot partition: <code>mv root/boot/* boot</code>.
+    </li>
+    <li>
+Unmount the two partitions: <code>umount boot root</code>.
+    </li>
+    <li>
+Remove the directories used for the mount points: <code>rmdir boot root</code>.
+    </li>
+  </ol>
+  <p>
+After that you can remove the SD card and put it in the Raspberry Pi. To SSH to
+the Raspberry Pi use the default hostname <strong>alarmpi</strong> and the user
+<strong>root</strong> with password <strong>root</strong>.
+  </p>
+  <p>
+<strong>Content of <code>disk.layout</code> file</strong>
+  </p>
+<pre class="code highlight js-syntax-highlight plaintext"><code># Partition table generated from /dev/mmcblk0&#x000A;unit: sectors&#x000A;&#x000A;: start=     8192, size=   196608, Id= c&#x000A;: start=   204800, size=         , Id=83</code></pre>
+  <h2 class="text-center">
+    <a id="post-installation-setup" class="anchor" href="#post-installation-setup">
+Post Installation Setup
+    </a>
+  </h2>
+  <p>
+After a successful boot of the Raspberry Pi you can either attach a keyboard and
+a display or ssh to it (<code>ssh root@alarmpi</code>).
+  </p>
+  <ol>
+    <li>
+Update the system: <code>pacman -Syu --noconfirm</code>.
+    </li>
+    <li>
+Install sudo: <code>pacman -S sudo --noconfirm</code>.
+    </li>
+    <li>
+Set the timezone to CET: <code>timedatectl set-timezone Europe/Rome</code>.
+    </li>
+    <li>
+Add new user (replace USERNAME with your preference):
+<code>useradd -m -G wheel -s /bin/bash USERNAME</code>.
+    </li>
+    <li>
+Change password for root and user (replace PASSWORD with your preference):
+<code>echo "root:PASSWORD" | chpasswd</code> and
+<code>echo "USERNAME:PASSWORD" | chpasswd</code>.
+    </li>
+    <li>
+Edit the sudoers file via <code>nano /etc/sudoers</code> and remove the comment
+tag <code>#</code> on the line before the
+<code>%wheel ALL=(ALL) NOPASSWD: ALL</code> string. Save and exit by pressing
+CTRL+O, CTRL+X.
+    </li>
+    <li>
+Change the hostname of the Raspberry (replace HOSTNAME with your preference):
+<code>hostnamectl set-hostname HOSTNAME</code>.
+    </li>
+    <li>
+Finally reboot the Raspberry Pi via the <code>reboot</code> command.
+    </li>
+  </ol>
+  <p>
+After that the Raspberry Pi is reachable via SSH under
+<code>ssh root@HOSTNAME</code> and <code>ssh USERNAME@HOSTNAME</code> with the
+modified passwords.
+  </p>
+  <hr>
+  <h4 class="text-center">
+<small>Free University of Bolzano - Faculty of Computer Science -
+2013-2016</small>
+  </h4>
+  <a href="http://www.inf.unibz.it/">
+    <img class="img-responsive center-block" src="./images/unibz_cs_logo.png" alt="unibz_cs_logo">
+  </a>
+</div>
+</body>
